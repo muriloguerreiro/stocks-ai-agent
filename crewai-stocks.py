@@ -1,6 +1,5 @@
 #Importação de Bibliotecas
 
-import json
 import os
 from datetime import datetime
 
@@ -13,25 +12,14 @@ from langchain_openai import ChatOpenAI
 from langchain_community.tools import DuckDuckGoSearchResults
 
 import streamlit as st
-import matplotlib.pyplot as plt
 
 
 #Criando Yahoo Finance Tool
 
 def fetch_stock_price(ticket):
     stock = yf.download(ticket, start="2023-08-08", end="2024-08-08")
-    
-    plt.figure(figsize=(10, 4))
-    plt.plot(stock['Close'], label='Close Price')
-    plt.title(f'{ticket} Stock Price (Last Year)')
-    plt.xlabel('Date')
-    plt.ylabel('Price (USD)')
-    plt.legend()
-    plt.grid(True)
-    plt.savefig(f'{ticket}_stock_price.png')
-    plt.close()
-    
-    return stock, f'{ticket}_stock_price.png'
+
+    return stock
 
 yahoo_finance_tool = Tool(
     name = "Yahoo Finance Tool",
@@ -41,7 +29,7 @@ yahoo_finance_tool = Tool(
 
 #Importando OpenaAI LLM - GPT
 
-os.environ['OPENAI_API_KEY'] = st.secrets['OPENAI_API_KEY']
+os.environ['OPENAI_API_KEY'] = st.secrets('OPENAI_API_KEY')
 llm = ChatOpenAI(model="gpt-3.5-turbo")
 
 # Criando Agents e Tasks
@@ -53,7 +41,7 @@ stockPriceAnalyst = Agent(
     an especific stock and make predictions about its future. """,
     verbose=True,
     llm=llm,
-    max_iter=3,
+    max_iter=1,
     memory=True,
     allow_delegation = False,
     tools=[yahoo_finance_tool]
@@ -81,7 +69,7 @@ newsAnalyst = Agent(
     You consider also the source of the news articles. """,
     verbose=True,
     llm=llm,
-    max_iter=5,
+    max_iter=1,
     memory=True,
     allow_delegation = False,
     tools=[search_tool]
@@ -109,7 +97,7 @@ stockAnalystWriter = Agent(
     You're able to hold multiple opinions when analysing anything. """,
     verbose=True,
     llm=llm,
-    max_iter=3,
+    max_iter=1,
     memory=True,
     allow_delegation = True
 )
@@ -135,7 +123,7 @@ crew = Crew(
     full_output = True,
     share_crew = False,
     manager_llm = llm,
-    max_iter=8
+    max_iter=1
 )
 
 top_stocks = {
@@ -167,8 +155,4 @@ if submit_button:
         st.error("Please fill the ticket field")
     else:
         results = crew.kickoff(inputs={'ticket': topic})
-
-        stock_data, stock_chart = fetch_stock_price(topic)
-        st.image(stock_chart, caption=f'{topic} Stock Price Chart', use_column_width=True)
-
         st.write(results['final_output'])
