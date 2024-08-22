@@ -68,7 +68,7 @@ getStockPrice = Task(
 
 #Importando Duck Duck Go Tool
 
-search_tool = DuckDuckGoSearchResults(backend='news', num_results=10)
+search_tool = DuckDuckGoSearchResults(backend='news', num_results=3)
 
 newsAnalyst = Agent(
     role="Stock News Analyst",
@@ -88,17 +88,16 @@ newsAnalyst = Agent(
 )
 
 getNews = Task(
-    description=f"""Take the stock and always include BTC to it (if not request).
-    Use the search tool to search each one individually.
+    description=f""" Use the search tool to search each one individually.
     The current date is {datetime.now()}.
-    Compose the results into a helpful report""",
+    Compose the results into a helpful report """,
     agent=newsAnalyst,
-    expected_output="""A summary of the overall market and one sentence summary for each request asset.
+    expected_output=""" A summary of the overall market and one sentence summary for each request asset.
     Include a fear/greed score for each asset based on the news. Use format:
     <STOCK ASSET>
     <SUMMARY BASED ON NEWS>
     <TREND PREDICTION>
-    <FEAR/GREED SCORE>"""
+    <FEAR/GREED SCORE> """
 )
 
 stockAnalystWriter = Agent(
@@ -168,8 +167,6 @@ if submit_button:
         st.error("Please fill the ticket field")
     else:
         results = crew.kickoff(inputs={'ticket': topic})
-
-        st.subheader(f"Results for {topic} stock:")
 
         stock_data, stock_chart = fetch_stock_price(topic)
         st.image(stock_chart, caption=f'{topic} Stock Price Chart', use_column_width=True)
