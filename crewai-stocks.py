@@ -47,7 +47,7 @@ stockPriceAnalyst = Agent(
     an especific stock and make predictions about its future. """,
     verbose=True,
     llm=llm,
-    max_iter=5,
+    max_iter=3,
     memory=True,
     allow_delegation = False,
     tools=[yahoo_finance_tool]
@@ -87,7 +87,7 @@ newsAnalyst = Agent(
     You consider also the source of the news articles. """,
     verbose=True,
     llm=llm,
-    max_iter=10,
+    max_iter=5,
     memory=True,
     allow_delegation = False,
     tools=[search_tool]
@@ -124,7 +124,7 @@ stockAnalystWriter = Agent(
     You're able to hold multiple opinions when analysing anything. """,
     verbose=True,
     llm=llm,
-    max_iter=5,
+    max_iter=3,
     memory=True,
     allow_delegation = True
 )
@@ -158,10 +158,23 @@ crew = Crew(
     full_output = True,
     share_crew = False,
     manager_llm = llm,
-    max_iter=15
+    max_iter=8
 )
 
 # results = crew.kickoff(inputs={'ticket': 'KO'})
+
+top_stocks = {
+    "AAPL": "Apple Inc.",
+    "MSFT": "Microsoft Corporation",
+    "GOOGL": "Alphabet Inc.",
+    "AMZN": "Amazon.com Inc.",
+    "TSLA": "Tesla Inc.",
+    "FB": "Meta Platforms Inc.",
+    "NVDA": "NVIDIA Corporation",
+    "BRK.B": "Berkshire Hathaway Inc.",
+    "JNJ": "Johnson & Johnson",
+    "V": "Visa Inc."
+}
 
 with st.sidebar:
     st.header('Enter the Stock to Research')
@@ -170,11 +183,15 @@ with st.sidebar:
         topic = st.text_input("Select the ticket")
         submit_button = st.form_submit_button(label = "Run Research")
 
+    st.markdown("### Top 10 US Stocks")
+    stock_list = "\n".join([f"- **{ticker}** - {company}" for ticker, company in top_stocks.items()])
+    st.markdown(stock_list)
+
 if submit_button:
     if not topic:
         st.error("Please fill the ticket field")
     else:
         results = crew.kickoff(inputs={'ticket': topic})
 
-        st.subheader("Results for {ticket} stock:")
+        st.subheader(f"Results for {topic} stock:")
         st.write(results['final_output'])
