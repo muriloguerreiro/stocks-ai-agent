@@ -13,13 +13,25 @@ from langchain_openai import ChatOpenAI
 from langchain_community.tools import DuckDuckGoSearchResults
 
 import streamlit as st
+import matplotlib.pyplot as plt
 
 
 #Criando Yahoo Finance Tool
 
 def fetch_stock_price(ticket):
     stock = yf.download(ticket, start="2023-08-08", end="2024-08-08")
-    return stock
+    
+    plt.figure(figsize=(10, 4))
+    plt.plot(stock['Close'], label='Close Price')
+    plt.title(f'{ticket} Stock Price (Last Year)')
+    plt.xlabel('Date')
+    plt.ylabel('Price (USD)')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(f'{ticket}_stock_price.png')
+    plt.close()
+    
+    return stock, f'{ticket}_stock_price.png'
 
 yahoo_finance_tool = Tool(
     name = "Yahoo Finance Tool",
@@ -27,18 +39,12 @@ yahoo_finance_tool = Tool(
     func= lambda ticket: fetch_stock_price(ticket)
 )
 
-
-# In[4]:
-
-
 #Importando OpenaAI LLM - GPT
 
 os.environ['OPENAI_API_KEY'] = st.secrets['OPENAI_API_KEY']
 llm = ChatOpenAI(model="gpt-3.5-turbo")
 
-
-# In[5]:
-
+# Criando Agents e Tasks
 
 stockPriceAnalyst = Agent(
     role="Senior stock price Analyst",
@@ -53,10 +59,6 @@ stockPriceAnalyst = Agent(
     tools=[yahoo_finance_tool]
 )
 
-
-# In[6]:
-
-
 getStockPrice = Task(
     description="Analyse the stock {ticket} price history and create a trend analyses of up, down or sideways",
     agent=stockPriceAnalyst,
@@ -64,17 +66,9 @@ getStockPrice = Task(
     eg. stock= 'AAPL, price UP' """
 )
 
-
-# In[7]:
-
-
 #Importando Duck Duck Go Tool
 
 search_tool = DuckDuckGoSearchResults(backend='news', num_results=10)
-
-
-# In[8]:
-
 
 newsAnalyst = Agent(
     role="Stock News Analyst",
@@ -93,10 +87,6 @@ newsAnalyst = Agent(
     tools=[search_tool]
 )
 
-
-# In[9]:
-
-
 getNews = Task(
     description=f"""Take the stock and always include BTC to it (if not request).
     Use the search tool to search each one individually.
@@ -110,10 +100,6 @@ getNews = Task(
     <TREND PREDICTION>
     <FEAR/GREED SCORE>"""
 )
-
-
-# In[10]:
-
 
 stockAnalystWriter = Agent(
     role="Senior Stock Analyst Writer",
@@ -129,10 +115,6 @@ stockAnalystWriter = Agent(
     allow_delegation = True
 )
 
-
-# In[11]:
-
-
 writeAnalysis = Task(
     description=""" Use the stock price trend and the stock news report to create an analysis and write the newsletter about the {ticket} company that is brief and highlishts the most important points.
     Focus on the stock price, news and fear/greed score. What are the near future considerations?
@@ -146,10 +128,6 @@ writeAnalysis = Task(
     context = [getStockPrice, getNews]
 )
 
-
-# In[12]:
-
-
 crew = Crew(
     agents = [stockPriceAnalyst, newsAnalyst, stockAnalystWriter],
     tasks = [getStockPrice, getNews, writeAnalysis],
@@ -161,8 +139,6 @@ crew = Crew(
     max_iter=8
 )
 
-# results = crew.kickoff(inputs={'ticket': 'KO'})
-
 top_stocks = {
     "AAPL": "Apple Inc.",
     "MSFT": "Microsoft Corporation",
@@ -171,16 +147,16 @@ top_stocks = {
     "TSLA": "Tesla Inc.",
     "FB": "Meta Platforms Inc.",
     "NVDA": "NVIDIA Corporation",
-    "BRK.B": "Berkshire Hathaway Inc.",
+    "BRK.B": "Berkshire Hathaway",
     "JNJ": "Johnson & Johnson",
     "V": "Visa Inc."
 }
 
 with st.sidebar:
-    st.header('Enter the Stock to Research')
+    st.header('Stock Analyzer')
 
     with st.form(key='research_form'):
-        topic = st.text_input("Select the ticket")
+        topic = st.text_input("Insert the ticket here:")
         submit_button = st.form_submit_button(label = "Run Research")
 
     st.markdown("### Top 10 US Stocks")
@@ -194,4 +170,8 @@ if submit_button:
         results = crew.kickoff(inputs={'ticket': topic})
 
         st.subheader(f"Results for {topic} stock:")
+
+        stock_data, stock_chart = fetch_stock_price(topic)
+        st.image(stock_chart, caption=f'{topic} Stock Price Chart', use_column_width=True)
+
         st.write(results['final_output'])
