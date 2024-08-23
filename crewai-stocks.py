@@ -54,7 +54,7 @@ stockPriceAnalyst = Agent(
     an especific stock and make predictions about its future. """,
     verbose=True,
     llm=llm,
-    max_iter=4,
+    max_iter=5,
     memory=True,
     allow_delegation = False,
     tools=[yahoo_finance_tool]
@@ -69,7 +69,7 @@ getStockPrice = Task(
 
 #Importando Duck Duck Go Tool
 
-search_tool = DuckDuckGoSearchResults(backend='news', num_results=8)
+search_tool = DuckDuckGoSearchResults(backend='news', num_results=10)
 
 newsAnalyst = Agent(
     role="Stock News Analyst",
@@ -82,7 +82,7 @@ newsAnalyst = Agent(
     You consider also the source of the news articles. """,
     verbose=True,
     llm=llm,
-    max_iter=8,
+    max_iter=10,
     memory=True,
     allow_delegation = False,
     tools=[search_tool]
@@ -110,7 +110,7 @@ stockAnalystWriter = Agent(
     You're able to hold multiple opinions when analysing anything. """,
     verbose=True,
     llm=llm,
-    max_iter=4,
+    max_iter=5,
     memory=True,
     allow_delegation = True
 )
@@ -136,7 +136,7 @@ crew = Crew(
     full_output = True,
     share_crew = False,
     manager_llm = llm,
-    max_iter=12
+    max_iter=15
 )
 
 top_stocks = {
