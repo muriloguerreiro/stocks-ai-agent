@@ -19,7 +19,6 @@ import streamlit as st
 
 def fetch_stock_price(ticket):
     stock = yf.download(ticket, start="2023-08-08", end="2024-08-08")
-
     return stock
 
 yahoo_finance_tool = Tool(
@@ -30,7 +29,7 @@ yahoo_finance_tool = Tool(
 
 #Importando OpenaAI LLM - GPT
 
-os.environ['OPENAI_API_KEY'] = st.secrets('OPENAI_API_KEY')
+os.environ['OPENAI_API_KEY'] = st.secrets('OPEN_API_KEY')
 llm = ChatOpenAI(model="gpt-3.5-turbo")
 
 # Criando Agents e Tasks
