@@ -1,6 +1,7 @@
 #Importação de Bibliotecas
 
 import os
+import json
 from datetime import datetime
 
 import yfinance as yf
